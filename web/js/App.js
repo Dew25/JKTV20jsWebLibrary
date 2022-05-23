@@ -1,11 +1,15 @@
 "use strict";
 
 import {viewModule} from './ViewModule.js';
+import {loginModule} from './LoginModule.js';
+
+
 export {checkMenu};
 const newAuthor = document.getElementById('menu_new_author');
 newAuthor.addEventListener('click',(e)=>{
     e.preventDefault();
     toggleMenuActive('menu_new_author');
+    viewModule.showNewAuthorForm();
 });
 const newBook = document.getElementById('menu_new_book');
 newBook.addEventListener('click',(e)=>{
@@ -30,13 +34,12 @@ adminPanel.addEventListener('click',(e)=>{
 const menuLogin = document.getElementById('menu_login');
 menuLogin.addEventListener('click',(e)=>{
     e.preventDefault();
-    hiddenMenuLogin();
     viewModule.showLoginForm();
 });
 const menuLogout = document.getElementById('menu_logout');
 menuLogout.addEventListener('click',(e)=>{
     e.preventDefault();
-    hiddenMenuLogout();
+    loginModule.logout();
 });
 
 function toggleMenuActive(selectedElementId){
@@ -53,20 +56,13 @@ function toggleMenuActive(selectedElementId){
         }
     }
 }
-function hiddenMenuLogin(){
-    document.getElementById('menu_login').classList.add('d-none');
-    document.getElementById('menu_logout').classList.remove('d-none');
-    toggleMenuActive();
-}
-function hiddenMenuLogout(){
-    document.getElementById('menu_logout').classList.add('d-none');
-    document.getElementById('menu_login').classList.remove('d-none');
-    toggleMenuActive();
-    document.getElementById('content').innerHTML = '';
-}
+
 function checkMenu(){
     const userRole = JSON.parse(sessionStorage.getItem('role'));
     if(userRole === null){
+        if(!newAuthor.classList.contains('d-none')){
+            newAuthor.classList.add('d-none');
+        }
         if(!newBook.classList.contains('d-none')){
             newBook.classList.add('d-none');
         }
@@ -85,7 +81,12 @@ function checkMenu(){
         if(!menuLogout.classList.contains('d-none')){
             menuLogout.classList.add('d-none');
         }
+        
+        return;
     }else if('READER'===userRole){
+        if(!newAuthor.classList.contains('d-none')){
+            newAuthor.classList.add('d-none');
+        }
         if(!newBook.classList.contains('d-none')){
             newBook.classList.add('d-none');
         }
@@ -105,6 +106,9 @@ function checkMenu(){
             menuLogout.classList.remove('d-none');
         }
     }else if('MANAGER'===userRole){
+        if(newAuthor.classList.contains('d-none')){
+            newAuthor.classList.remove('d-none');
+        }
         if(newBook.classList.contains('d-none')){
             newBook.classList.remove('d-none');
         }
@@ -124,6 +128,9 @@ function checkMenu(){
             menuLogout.classList.remove('d-none');
         }
     }else if('ADMINISTRATOR'===userRole){
+        if(newAuthor.classList.contains('d-none')){
+            newAuthor.classList.remove('d-none');
+        }
         if(newBook.classList.contains('d-none')){
             newBook.classList.remove('d-none');
         }
@@ -144,3 +151,4 @@ function checkMenu(){
         }
     }
 }
+checkMenu();

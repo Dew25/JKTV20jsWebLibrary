@@ -15,6 +15,7 @@ const newBook = document.getElementById('menu_new_book');
 newBook.addEventListener('click',(e)=>{
     e.preventDefault();
     toggleMenuActive('menu_new_book');
+    viewModule.showNewBookForm();
 });
 const buyBook = document.getElementById('menu_buy_book');
 buyBook.addEventListener('click',(e)=>{

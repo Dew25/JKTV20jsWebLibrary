@@ -6,12 +6,15 @@
 package servlets;
 
 import entity.Author;
-import entity.Reader;
-import entity.Role;
+import entity.Book;
 import entity.User;
-import entity.UserRoles;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.json.Json;
@@ -19,19 +22,20 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import jsonbuilders.AuthorJsonBuilder;
-import jsonbuilders.UserJsonBuilder;
 import session.AuthorFacade;
+import session.BookFacade;
 import session.ReaderFacade;
 import session.RoleFacade;
 import session.UserFacade;
 import session.UserRolesFacade;
-import tools.EncryptPassword;
 
 /**
  *
@@ -40,12 +44,18 @@ import tools.EncryptPassword;
 @WebServlet(name = "ManagerServlet", urlPatterns = {
     "/getListAuthors",
     "/createAuthor",
+    "/getChangeAuthor",
+    "/updateAuthor",
+    "/createBook",
+    
     
     
 })
+@MultipartConfig
 public class ManagerServlet extends HttpServlet {
     @EJB ReaderFacade readerFacade;
     @EJB AuthorFacade authorFacade;
+    @EJB BookFacade bookFacade;
     @EJB UserFacade userFacade;
     @EJB RoleFacade roleFacade;
     @EJB UserRolesFacade userRolesFacade;
@@ -121,9 +131,95 @@ public class ManagerServlet extends HttpServlet {
                     out.println(job.build().toString());
                 }
                 break;
+            case "/getChangeAuthor":
+                String authorId = request.getParameter("authorId");
+                Author author = authorFacade.find(Long.parseLong(authorId));
+                ajb = new AuthorJsonBuilder();
+                JsonObject joAuthor = ajb.getJsonObjectAuthor(author);
+                job.add("status", true);
+                job.add("info", "Редактируем автора");
+                job.add("changeAuthor", joAuthor);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case "/updateAuthor":
+                jr = Json.createReader(request.getInputStream());
+                jo = jr.readObject();
+                name = jo.getString("name","");
+                lastname = jo.getString("lastname","");
+                year = jo.getString("year","");
+                day = jo.getString("day","");
+                month = jo.getString("month","");
+                String id = jo.getString("id","");
+                Author changeAuthor = authorFacade.find(Long.parseLong(id));
+                changeAuthor.setName(name);
+                changeAuthor.setLastname(lastname);
+                changeAuthor.setDay(Integer.parseInt(day));
+                changeAuthor.setYear(Integer.parseInt(year));
+                changeAuthor.setMonth(Integer.parseInt(month));
+                try {
+                    authorFacade.edit(changeAuthor);
+                    job.add("status", true);
+                    job.add("info", "Автор успешно изменен");
+                } catch (Exception e) {
+                    job.add("status", false);
+                    job.add("info", "Изменить автора не удалось");
+                }
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case "/createBook":
+                String caption = request.getParameter("caption");
+                String[] authorsId = request.getParameterValues("authors");
+                String publishedYear = request.getParameter("publishedYear");
+                String price = request.getParameter("price");
+                String pathToDir = "D:\\UploadDir\\JKTV20WebLibrary";
+                Part part = request.getPart("cover");
+                String filename = getFileName(part);
+                String pathToFile = pathToDir+File.separator+filename;
+                File file = new File(pathToFile);
+                file.mkdirs();
+                try(InputStream fileContent = part.getInputStream()){
+                    Files.copy(fileContent, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+                Book newBook = new Book();
+                newBook.setCaption(caption);
+                newBook.setPrice(price);
+                newBook.setCover(pathToFile);
+                newBook.setPublishedYear(Integer.parseInt(publishedYear));
+                List<Author> authors = new ArrayList<>();
+                for (int i = 0; i < authorsId.length; i++) {
+                    authors.add(authorFacade.find(Long.parseLong(authorsId[i])));
+                }
+                newBook.setAuthors(authors);
+                try {
+                    bookFacade.create(newBook);
+                    job.add("status", true);
+                    job.add("info", "Добавлена новая книга");
+                } catch (Exception e) {
+                    job.add("status", false);
+                    job.add("info", "Добавить книгу не удалось");
+                }
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
         }
     }
-
+    private String getFileName(Part part){
+        final String partHeader = part.getHeader("content-disposition");
+        for (String content : part.getHeader("content-disposition").split(";")){
+            if(content.trim().startsWith("filename")){
+                return content
+                        .substring(content.indexOf('=')+1)
+                        .trim()
+                        .replace("\"",""); 
+            }
+        }
+        return null;
+    }
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.

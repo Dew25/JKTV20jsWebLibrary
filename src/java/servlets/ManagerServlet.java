@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 import jsonbuilders.AuthorJsonBuilder;
+import jsonbuilders.BookJsonBuilder;
 import session.AuthorFacade;
 import session.BookFacade;
 import session.ReaderFacade;
@@ -47,6 +48,9 @@ import session.UserRolesFacade;
     "/getChangeAuthor",
     "/updateAuthor",
     "/createBook",
+     "/getListBooks",
+    "/getChangeBook",
+    
     
     
     
@@ -202,6 +206,25 @@ public class ManagerServlet extends HttpServlet {
                     job.add("status", false);
                     job.add("info", "Добавить книгу не удалось");
                 }
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case "/getListBooks":
+                List<Book> books = bookFacade.findAll();
+                job.add("status", true);
+                job.add("info", "Список книг");
+                job.add("books", new BookJsonBuilder().getJsonArrayBooks(books));
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case  "/getChangeBook":
+                String changeBookId = request.getParameter("changeBookId");
+                Book changeBook = bookFacade.find(Long.parseLong(changeBookId));
+                job.add("status", true);
+                job.add("info", "Редактируем книгу");
+                job.add("changeBook", new BookJsonBuilder().getJsonObjectBook(changeBook));
                 try (PrintWriter out = response.getWriter()) {
                     out.println(job.build().toString());
                 }

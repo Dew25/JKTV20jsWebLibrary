@@ -71,12 +71,12 @@ class ViewModule{
                         <div class="card border-light my-5" style="width: 30rem;">
                             <div class="card-body">
                                 <h3 class="card-body">Изменить автора</h3>
-                              <select id="authors"></select>
+                              <select id="changeAuthorId"></select>
                             </div>
                         </div>
                     </div>`;
         managerModule.insertAuthorOptions(true);
-        document.getElementById('authors').addEventListener('change',e=>{
+        document.getElementById('changeAuthorId').addEventListener('change',e=>{
             managerModule.insertAuthorDataToChange();
         });
         document.getElementById('btn_add_author').addEventListener('click',e=>{
@@ -97,11 +97,12 @@ class ViewModule{
                       <legend>Добавление книги</legend>
                       <div class="form-group mb-3">
                         <label for="caption">Название книги</label>
+                        <input type="hidden" id="id" name="id">
                         <input type="text" class="form-control" id="caption" name="caption" aria-describedby="caption" placeholder="">
                         <small id="caption" class="form-text text-muted d-none">Это поле не должно быть пустым</small>
                       </div>
-                        <label for="authors">Авторы</label>
-                        <select multiple="true" class="form-select" id="authors" name="authors"></select>
+                        <label for="changeAuthorId">Авторы</label>
+                        <select multiple="true" class="form-select" id="changeAuthorId" name="authors"></select>
                       <div class="form-group mt-3">
                         <label for="publishedYear">Год издания</label>
                         <input type="text" class="form-control" id="publishedYear" name="publishedYear" aria-describedby="publishedYear" placeholder="">
@@ -121,11 +122,23 @@ class ViewModule{
                     </fieldset>
                </form>
             </div>
+            <div class="card border-light my-5" style="width: 30rem;">
+                <div class="card-body">
+                    <h3 class="card-body">Изменить данные книги</h3>
+                  <select id="changeBookId"></select>
+                </div>
+            </div>
         </div>`;
         managerModule.insertAuthorOptions(false);
+        managerModule.insertBookOptions(true);
+        managerModule.insertBookDataToChange();
         document.getElementById('createBookForm').addEventListener('submit',e=>{
             e.preventDefault();
             managerModule.createNewBook();
+        });
+        document.getElementById('changeBookId').addEventListener('change',e=>{
+            managerModule.insertBookDataToChange();
+            
         });
     }
 }

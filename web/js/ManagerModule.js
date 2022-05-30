@@ -11,7 +11,7 @@ class ManagerModule{
         promiseListAuthors.then(response => response.json())
                     .then(response =>{
                         if(response.status){
-                            let select = document.getElementById('authors');
+                            let select = document.getElementById('changeAuthorId');
                             select.options.length = 0;
                             let option = document.createElement('option');
                             if(combobox){
@@ -136,6 +136,69 @@ class ManagerModule{
                     })
                     .catch(error => {
                         document.getElementById('info').innerHTML="Ошибка createNewBook: "+error;
+                    })
+    }
+    insertBookOptions(combobox){
+         let promiseListBooks = fetch('getListBooks', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            credentials: 'include'
+        });
+        promiseListBooks.then(response => response.json())
+                    .then(response =>{
+                        if(response.status){
+                            let select = document.getElementById('changeBookId');
+                            select.options.length = 0;
+                            let option = document.createElement('option');
+                            if(combobox){
+                                option.text = 'Выберите книгу';
+                                option.value = '#';
+                                select.options.add(option);
+                            }
+                            for (let i=0; i<response.books.length;i++) {
+                                option = document.createElement('option');
+                                option.text = response.books[i].caption;
+                                option.value = response.books[i].id;
+                                select.options.add(option);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('info').innerHTML="Ошибка insertAuthorOptions: "+error;
+                    });
+    }
+    insertBookDataToChange(){
+        const bookId = document.getElementById('changeBookId').value;
+        let promiseInsertBookData = fetch('getChangeBook?changeBookId='+bookId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            credentials: 'include',
+        });
+        promiseInsertBookData.then(response => response.json())
+                    .then(response =>{
+                        if(response.status){
+                            document.getElementById('id').value=response.changeBook.id;
+                            document.getElementById('caption').value=response.changeBook.caption;
+                            document.getElementById('publishedYear').value=response.changeBook.publishedYear;
+                            document.getElementById('price').value=response.changeBook.price;
+                            managerModule.insertAuthorOptions(false);
+                            let select = document.getElementById('changeAuthorId');
+                            for (var i = 0; i < select.options.length; i++) {
+                                for (var j = 0; j < response.changeBook.authors.length; j++) {
+                                    if(response.changeBook.authors[j].id === select.options[i]){
+                                        select.options[i].selected = true;
+                                    }
+                                }
+                            }
+//                            managerModule.isertCovers();
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('info').innerHTML="Ошибка insertBookDataToChange: "+error;
                     })
     }
 }

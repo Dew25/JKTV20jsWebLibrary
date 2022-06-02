@@ -127,7 +127,7 @@ class ManagerModule{
         let promiseCreateBook = fetch('createBook', {
             method: 'POST',
             credentials: 'include',
-            body: new FormData(document.getElementById('createBookForm'))
+            body: new FormData(document.getElementById('bookForm'))
         });
         promiseCreateBook.then(response => response.json())
                     .then(response =>{
@@ -199,6 +199,50 @@ class ManagerModule{
                     })
                     .catch(error => {
                         document.getElementById('info').innerHTML="Ошибка insertBookDataToChange: "+error;
+                    })
+    }
+    updateBook(){
+        let promiseUpdateBook = fetch('updateBook', {
+            method: 'POST',
+            credentials: 'include',
+            body: new FormData(document.getElementById('bookForm'))
+        });
+        promiseUpdateBook.then(response => response.json())
+                    .then(response =>{
+                        document.getElementById('info').innerHTML=response.info;
+                        viewModule.showNewBookForm();
+                    })
+                    .catch(error => {
+                        document.getElementById('info').innerHTML="Ошибка updateBook: "+error;
+                    })
+    }
+    insertOptionsCoverFileName(){
+        let promiseInsertOptionsCoverFileName = fetch('getListCoverFileNames', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            credentials: 'include',
+        });
+        promiseInsertOptionsCoverFileName.then(response => response.json())
+                    .then(response =>{
+                        if(response.status){
+                            let select = document.getElementById('cover_file_name');
+                            select.options.length = 0;
+                            let option = document.createElement('option');
+                                option.text = 'Выберите книгу';
+                                option.value = '';
+                                select.options.add(option);
+                            for(let i = 0; i<response.coverFileNames.length;i++) {
+                                option = document.createElement('option');
+                                option.text = response.coverFileNames[i];
+                                option.value = response.coverFileNames[i];
+                                select.options.add(option);
+                            } 
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('info').innerHTML="Ошибка insertOptionsCoverFileName: "+error;
                     })
     }
 }

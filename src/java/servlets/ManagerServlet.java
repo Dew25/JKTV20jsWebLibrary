@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -50,20 +51,20 @@ import session.UserRolesFacade;
     "/createBook",
      "/getListBooks",
     "/getChangeBook",
-    
-    
-    
+    "/getListCoverFileNames",
+    "/updateBook",
     
 })
 @MultipartConfig
 public class ManagerServlet extends HttpServlet {
-    @EJB ReaderFacade readerFacade;
-    @EJB AuthorFacade authorFacade;
-    @EJB BookFacade bookFacade;
-    @EJB UserFacade userFacade;
-    @EJB RoleFacade roleFacade;
-    @EJB UserRolesFacade userRolesFacade;
+    @EJB private ReaderFacade readerFacade;
+    @EJB private AuthorFacade authorFacade;
+    @EJB private BookFacade bookFacade;
+    @EJB private UserFacade userFacade;
+    @EJB private RoleFacade roleFacade;
+    @EJB private UserRolesFacade userRolesFacade;
     
+    private final String pathToDir = "D:\\UploadDir\\JKTV20jsWebLibrary";
    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -179,7 +180,6 @@ public class ManagerServlet extends HttpServlet {
                 String[] authorsId = request.getParameterValues("authors");
                 String publishedYear = request.getParameter("publishedYear");
                 String price = request.getParameter("price");
-                String pathToDir = "D:\\UploadDir\\JKTV20WebLibrary";
                 Part part = request.getPart("cover");
                 String filename = getFileName(part);
                 String pathToFile = pathToDir+File.separator+filename;
@@ -225,6 +225,64 @@ public class ManagerServlet extends HttpServlet {
                 job.add("status", true);
                 job.add("info", "Редактируем книгу");
                 job.add("changeBook", new BookJsonBuilder().getJsonObjectBook(changeBook));
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case "/getListCoverFileNames":
+                List<String> coverFileNames = new ArrayList<>();
+                File uploadDirFolder = new File(pathToDir);
+                File[] listOfFiles = uploadDirFolder.listFiles();
+                for (int i = 0; i < listOfFiles.length; i++) {
+                    if(listOfFiles[i].isFile()){
+                        coverFileNames.add(listOfFiles[i].getName());
+                    }
+                }
+                JsonArrayBuilder jab = Json.createArrayBuilder();
+                for (int i = 0; i < coverFileNames.size(); i++) {
+                    jab.add(coverFileNames.get(i));
+                }
+                job.add("status", true);
+                job.add("info", "список имен файлов обложек");
+                job.add("coverFileNames", jab.build());
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;
+            case "/updateBook":
+                id = request.getParameter("id");
+                caption = request.getParameter("caption");
+                authorsId = request.getParameterValues("authors");
+                publishedYear = request.getParameter("publishedYear");
+                price = request.getParameter("price");
+                try {
+                    part = request.getPart("cover");
+                    if(part == null) throw new Exception();
+                    filename = getFileName(part);
+                    pathToFile = pathToDir+File.separator+filename;
+                    file = new File(pathToFile);
+                    file.mkdirs();
+                    try(InputStream fileContent = part.getInputStream()){
+                        Files.copy(fileContent, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (Exception e) {
+                    filename = request.getParameter("coverFileName");
+                    pathToFile = pathToDir+File.separator+filename;
+                }
+                Book updateBook = bookFacade.find(Long.parseLong(id));
+                updateBook.setCaption(caption);
+                updateBook.setPrice(price);
+                updateBook.setPublishedYear(Integer.parseInt(publishedYear));
+                authors = new ArrayList<>();
+                for (int i = 0; i < authorsId.length; i++) {
+                    authors.add(authorFacade.find(Long.parseLong(authorsId[i])));
+                }
+                updateBook.setAuthors(authors);
+                updateBook.setCover(pathToFile);
+                bookFacade.edit(updateBook);
+                job.add("status", true);
+                job.add("info", "книга изменена");
+                
                 try (PrintWriter out = response.getWriter()) {
                     out.println(job.build().toString());
                 }

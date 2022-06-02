@@ -92,7 +92,7 @@ class ViewModule{
         document.getElementById('content').innerHTML = 
         `<div class="card border-light my-5" style="width: 30rem;">
             <div class="card-body">
-                <form id="createBookForm">
+                <form id="bookForm">
                     <fieldset>
                       <legend>Добавление книги</legend>
                       <div class="form-group mb-3">
@@ -101,8 +101,10 @@ class ViewModule{
                         <input type="text" class="form-control" id="caption" name="caption" aria-describedby="caption" placeholder="">
                         <small id="caption" class="form-text text-muted d-none">Это поле не должно быть пустым</small>
                       </div>
+                      <div class="form-group mb-3">
                         <label for="changeAuthorId">Авторы</label>
                         <select multiple="true" class="form-select" id="changeAuthorId" name="authors"></select>
+                      </div>        
                       <div class="form-group mt-3">
                         <label for="publishedYear">Год издания</label>
                         <input type="text" class="form-control" id="publishedYear" name="publishedYear" aria-describedby="publishedYear" placeholder="">
@@ -118,7 +120,12 @@ class ViewModule{
                         <input type="file" class="form-control" id="cover" name="cover" aria-describedby="cover" placeholder="">
                         <small id="cover" class="form-text text-muted d-none">Это поле не должно быть пустым</small>
                       </div>
+                      <div class="form-group mb-3 d-none" id="block_cover_file_name">
+                        <label for="cover_file_name">Загруженные обложки</label>
+                        <select class="form-select" id="cover_file_name" name="coverFileName"></select>
+                      </div> 
                         <button type="submit" class="btn btn-primary mt-4" id="btn_add_book">Добавить книгу</button>
+                        <button type="submit" class="btn btn-primary mt-4 d-none" id="btn_change_book">Изменить книгу</button>
                     </fieldset>
                </form>
             </div>
@@ -131,14 +138,23 @@ class ViewModule{
         </div>`;
         managerModule.insertAuthorOptions(false);
         managerModule.insertBookOptions(true);
-        managerModule.insertBookDataToChange();
-        document.getElementById('createBookForm').addEventListener('submit',e=>{
+        document.getElementById('bookForm').addEventListener('submit',e=>{
             e.preventDefault();
-            managerModule.createNewBook();
+            if(!document.getElementById('btn_add_book').classList.contains('d-none')){
+                managerModule.createNewBook();
+            }else{
+                managerModule.updateBook();
+            }
         });
+        
+       
         document.getElementById('changeBookId').addEventListener('change',e=>{
             managerModule.insertBookDataToChange();
-            
+            managerModule.insertOptionsCoverFileName();
+            document.getElementById('block_cover_file_name').classList.remove('d-none');
+            document.getElementsByTagName('legend')[0].innerHTML = "Изменение данных книги";
+            document.getElementById('btn_change_book').classList.remove('d-none');
+            document.getElementById('btn_add_book').classList.add('d-none');
         });
     }
 }
